@@ -44,7 +44,7 @@ public class BlockingTaskQueue {
 					in = (in + 1) % queue.length;
 					
 					//notify a thread that the queue is no longer empty
-					notEmpty.notifyAll();
+					notEmpty.notify();
 				}
 			}
 		}
@@ -62,7 +62,7 @@ public class BlockingTaskQueue {
 					out = (out + 1) % queue.length;
 					
 					//notify a thread that the queue is no longer full
-					notFull.notifyAll();
+					notFull.notify();
 					return(lastTask);
 				}
 			}

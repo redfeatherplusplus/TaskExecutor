@@ -2,6 +2,8 @@ package edu.utdallas.taskExecutor;
 import java.util.concurrent.BlockingQueue;   // Make sure to delete it after Daren add in his part
 import java.util.concurrent.PriorityBlockingQueue;
 
+import edu.utdallas.blockingFIFO.BlockingTaskQueue;
+
 public class TaskRunner implements Runnable
 {
 	/*
@@ -10,9 +12,11 @@ public class TaskRunner implements Runnable
 	 *  
 	 */
 	
-	public final static int QUEUE_SIZE = 20;
+	private BlockingTaskQueue blockingFifoQueue;
 	
-	private BlockingQueue <Task>  blockingFifoQueue = new PriorityBlockingQueue <Task>(QUEUE_SIZE) ;
+	public TaskRunner(BlockingTaskQueue blockingFifoQueue) {
+		this.blockingFifoQueue = blockingFifoQueue;
+	}
 	
 	public void run() 
 	{
@@ -31,7 +35,7 @@ public class TaskRunner implements Runnable
 		           // execution.
 		        }
 			} 
-			catch (InterruptedException e) {
+			catch (Throwable e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
