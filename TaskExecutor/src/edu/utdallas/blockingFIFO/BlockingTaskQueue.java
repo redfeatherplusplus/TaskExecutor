@@ -1,7 +1,5 @@
 package edu.utdallas.blockingFIFO;
 
-import java.util.concurrent.Semaphore;
-
 import edu.utdallas.taskExecutor.Task;
 
 public class BlockingTaskQueue {
@@ -9,16 +7,17 @@ public class BlockingTaskQueue {
 	public static final int DEFAULT_QUEUE_SIZE = 20;
 	
 	private Task[] queue;                 //FIFO queue of tasks
-	private static Semaphore queueLocks;  //ensures queue bounds maintained
-	private static Semaphore modifying;   //indicates if we are currently modifying the queue
+	private static Object notFull;        //monitors if queue is full
+	private static Object notEmpty;       //monitors if queue is empty
+	private static int population;        //number of elements in queue
 	private static int in;                //index to add at 
 	private static int out;               //index to take from
 	
 	public BlockingTaskQueue(int size) {
 		//create a BlockingTaskQueue of default size
 		queue = new Task[size];
-		queueLocks  = new Semaphore(size, true);
-		modifying = new Semaphore(1);
+		notFull = new Object();
+		notEmpty = new Object();
 		in = 0;
 		out = 0;
 	}
@@ -26,50 +25,48 @@ public class BlockingTaskQueue {
 	public BlockingTaskQueue() {
 		//create a BlockingTaskQueue of default size
 		queue = new Task[DEFAULT_QUEUE_SIZE];
-		queueLocks  = new Semaphore(DEFAULT_QUEUE_SIZE, true);
-		modifying = new Semaphore(1);
+		notFull = new Object();
+		notEmpty = new Object();
 		in = 0;
 		out = 0;
 	}
 	
 	//check if see if throws throwable is correct
-	public void add(Task task) throws Throwable {
-		//ensure that we are not currently modifying the queue
-		modifying.acquire();  
-		
-		//check if there are any available queueLocks, if not release modifying lock
-		//note that having queueLocks.acquire() throw an exception is undesirable
-		//as modifying.release() would not be executed
-		if (queueLocks.availablePermits() > 0) {
-			//acquire a lock from the queueLocks and add to the last index
-			queueLocks.acquire();
-			queue[in] = task;
-			in = (in + 1) % queue.length;
+	public void put(Task task) throws Throwable {
+		while (true) {
+			//block until notFull
+			if (population == queue.length) { notFull.wait(); }
+			
+			//in a critical section, put a task into the queue if possible
+			synchronized(this) {
+				if (population != queue.length) {
+					queue[in] = task;
+					in = (in + 1) % queue.length;
+					
+					//notify a thread that the queue is no longer empty
+					notEmpty.notifyAll();
+				}
+			}
 		}
-		
-		//notify that we are done adding
-		modifying.release();
 	}
 	
 	public Task take() throws Throwable {
-		//ensure that we are not currently modifying the queue
-		modifying.acquire();  
-
-		//check if at least one permit has been acquired, else release modifying lock
-		if (queueLocks.availablePermits() < queue.length) {
-			//release a lock from the queueLocks and remove the last index
-			queueLocks.release();
-			Task lastTask = queue[out];
-			out = (out + 1) % queue.length;
+		while (true) {
+			//block until notEmpty
+			if (population == 0) { notEmpty.wait(); }
 			
-			//notify that we are done taking
-			modifying.release();
-			return (lastTask);
-		}
-		else {
-			//notify that we are done taking
-			modifying.release();
-			throw new Exception("Queue currently empty");
+			//in a critical section, take a task from the queue if possible
+			synchronized(this) {
+				if (population != 0) {
+					Task lastTask = queue[out];
+					out = (out + 1) % queue.length;
+					
+					//notify a thread that the queue is no longer full
+					notFull.notifyAll();
+					return(lastTask);
+				}
+			}
 		}
 	}
+	
 }
