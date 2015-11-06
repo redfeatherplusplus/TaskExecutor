@@ -35,16 +35,18 @@ public class BlockingTaskQueue {
 	public void put(Task task) throws Throwable {
 		while (true) {
 			//block until notFull
-			if (population == queue.length) { notFull.wait(); }
+			if (population == queue.length) synchronized(notFull) { notFull.wait(); }
 			
 			//in a critical section, put a task into the queue if possible
-			synchronized(this) {
+			synchronized(notEmpty) {
 				if (population != queue.length) {
 					queue[in] = task;
 					in = (in + 1) % queue.length;
+					population++;
 					
 					//notify a thread that the queue is no longer empty
 					notEmpty.notify();
+					break;
 				}
 			}
 		}
@@ -53,13 +55,15 @@ public class BlockingTaskQueue {
 	public Task take() throws Throwable {
 		while (true) {
 			//block until notEmpty
-			if (population == 0) { notEmpty.wait(); }
+			if (population == 0) synchronized(notEmpty) { notEmpty.wait(); }
 			
 			//in a critical section, take a task from the queue if possible
-			synchronized(this) {
+			synchronized(notFull) {
 				if (population != 0) {
+					
 					Task lastTask = queue[out];
 					out = (out + 1) % queue.length;
+					population--;
 					
 					//notify a thread that the queue is no longer full
 					notFull.notify();

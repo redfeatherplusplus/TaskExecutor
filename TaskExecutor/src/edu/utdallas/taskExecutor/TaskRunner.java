@@ -1,6 +1,4 @@
 package edu.utdallas.taskExecutor;
-import java.util.concurrent.BlockingQueue;   // Make sure to delete it after Daren add in his part
-import java.util.concurrent.PriorityBlockingQueue;
 
 import edu.utdallas.blockingFIFO.BlockingTaskQueue;
 
@@ -25,16 +23,7 @@ public class TaskRunner implements Runnable
 	        Task newTask;
 			try {
 				newTask = blockingFifoQueue.take();
-				
-				try {
-		            newTask.execute();
-		        }
-		        catch(Throwable th) {
-					// Log (e.g. print exception message to console) 
-					// and drop any exceptions thrown by the task
-					// execution.
-					// e.printStackTrace();
-		        }
+	            newTask.execute();
 			} 
 			catch (Throwable e) {
 				// TODO Auto-generated catch block
