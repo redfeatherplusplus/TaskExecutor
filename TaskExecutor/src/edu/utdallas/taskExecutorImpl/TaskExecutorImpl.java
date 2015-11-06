@@ -18,12 +18,13 @@ public class TaskExecutorImpl implements TaskExecutor{
 		blockingFifoQueue = new BlockingTaskQueue(N);
 		RunnerList = new ArrayList<TaskRunner>();
 		
-		for(TaskRunner Runner : RunnerList)
+		for(int i = 0; i < N; i++)
 		{
-			Runner = new TaskRunner(blockingFifoQueue);			
-			Thread tmp = new Thread(Runner);
-			tmp.start();
-			
+			TaskRunner Runner = new TaskRunner(blockingFifoQueue);			
+			Runner.run();
+			//Thread tmp = new Thread(Runner);
+			//tmp.start();
+			RunnerList.add(Runner);
 		}
 		
 	}
@@ -36,7 +37,7 @@ public class TaskExecutorImpl implements TaskExecutor{
 			blockingFifoQueue.put(task);
 		} catch (Throwable e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			// e.printStackTrace();
 		}
 		// TODO Auto-generated method stub
 		

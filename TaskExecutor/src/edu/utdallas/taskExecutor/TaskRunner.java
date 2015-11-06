@@ -30,14 +30,15 @@ public class TaskRunner implements Runnable
 		            newTask.execute();
 		        }
 		        catch(Throwable th) {
-		           // Log (e.g. print exception’s message to console) 
-		           // and drop any exceptions thrown by the task’s
-		           // execution.
+					// Log (e.g. print exception message to console) 
+					// and drop any exceptions thrown by the task
+					// execution.
+					// e.printStackTrace();
 		        }
 			} 
 			catch (Throwable e) {
 				// TODO Auto-generated catch block
-				e.printStackTrace();
+				// e.printStackTrace();
 			}
 	        
 	    }
