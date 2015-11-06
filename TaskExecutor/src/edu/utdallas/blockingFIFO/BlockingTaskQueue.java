@@ -60,7 +60,6 @@ public class BlockingTaskQueue {
 			//in a critical section, take a task from the queue if possible
 			synchronized(notFull) {
 				if (population != 0) {
-					
 					Task lastTask = queue[out];
 					out = (out + 1) % queue.length;
 					population--;
